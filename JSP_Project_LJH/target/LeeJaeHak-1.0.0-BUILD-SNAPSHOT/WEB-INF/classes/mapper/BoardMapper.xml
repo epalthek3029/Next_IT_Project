@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.next.nextit.board.service.impl.BoardMapper">
+
+	<resultMap type="kr.or.next.nextit.board.service.BoardVo" id="boardMap">
+		<id property="seqno" column="seq_no"/>
+		<result property="num" column="num"/>
+		<result property="servicetype" column="service_type"/>
+		<result property="title" column="title"/>
+		<result property="contents" column="contents"/>
+		<result property="readcount" column="read_count"/>
+		<result property="usrip" column="usr_ip"/>
+		<result property="delat" column="del_at"/>
+		<result property="reguser" column="reg_user"/>
+		<result property="regdt" column="reg_dt"/>
+		<result property="upduser" column="upd_user"/>
+		<result property="upddt" column="upd_dt"/>
+	</resultMap>
+	
+	<insert id="insertBoardInfo" parameterType="kr.or.next.nextit.board.service.BoardVo" keyColumn="seq_no" keyProperty="seqno" useGeneratedKeys="true">
+		INSERT INTO tb_com_board (
+		    seq_no,
+		    service_type,
+		    title,
+		    contents,
+		    read_count,
+		    usr_ip,
+		    del_at,
+		    reg_user,
+		    reg_dt,
+		    upd_user,
+		    upd_dt
+		) VALUES (
+		    SEQ_TB_COM_BOARD.nextval,
+		    #{servicetype},
+		    #{title},
+		    #{contents},
+			  0,
+		    #{usrip},
+		    'N',
+		    #{reguser},
+		    sysdate,
+		    #{reguser},
+		    sysdate
+		)
+	</insert>
+	
+	<select id="selectBoardList" parameterType="kr.or.next.nextit.board.service.BoardSearchVo" resultMap="boardMap">
+		<!-- 
+		SELECT
+		    seq_no,
+		    service_type,
+		    title,
+		    contents,
+		    read_count,
+		    usr_ip,
+		    del_at,
+		    reg_user,
+		    reg_dt,
+		    upd_user,
+		    upd_dt
+		FROM
+		    tb_com_board
+		     -->
+		SELECT ROWNUM AS NUM, TEMP_BOARD.*
+			FROM(
+				SELECT
+				    seq_no,
+				    service_type,
+				    title,
+				    contents,
+				    read_count,
+				    usr_ip,
+				    del_at,
+				    reg_user,
+				    reg_dt,
+				    upd_user,
+				    upd_dt
+				FROM
+				    tb_com_board
+				WHERE
+					 del_at in ('N')
+				    ORDER BY upd_dt DESC
+				) TEMP_BOARD
+	</select>
+	
+</mapper>

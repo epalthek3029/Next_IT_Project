@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.next.nextit.member.service.impl.MemberMapper">
+	
+	<insert id="insertMemberInfo" parameterType="kr.or.next.nextit.member.service.MemberVo">
+		INSERT INTO tb_com_member (
+	    seq_no,
+	    usr_id,
+	    usr_name,
+	    usr_email,
+<!-- 	    usr_hp, -->
+<!-- 	    usr_fax, -->
+	    usr_gender,
+	    usr_age,
+	    usr_ip,
+	    del_at,
+	    reg_user,
+	    reg_dt,
+	    upd_user,
+	    upd_dt,
+	    usr_pwd
+		) VALUES (
+			SEQ_TB_COM_MEMBER.nextval,
+		    #{usrid},
+		    #{usrname},
+		    #{usremail},
+<!-- 		    #{usrhp}, -->
+<!-- 		    #{usrfax}, -->
+		    #{usrgender},
+		    #{usrage},
+		    #{usrip},
+			 'N',
+		    #{usrid},
+			 sysdate,
+		    #{usrid},
+		    sysdate,
+		    #{usrpwd}
+			)
+	</insert>
+	
+	<sql id="selectMemberWhere" >
+			<trim prefix="WHERE" prefixOverrides="AND | OR">
+<!-- 				searchType, searchText 값에 따라서 if 문으로 동적 쿼리를 적용 -->
+<!-- 				test=" ${} #{}" 문법은 사용하지 않음.. -->
+				 <if test="searchType != null and searchType != '' and searchText != null and searchType != ''">
+				 	AND ${searchType} like '%' || #{searchText} || '%'
+				 </if>
+				 
+<!-- 				if 문과 다르게 조건을 만족 하지 않을 경우 기본 쿼리를 otherwise 쿼리를 적용 -->
+				 <choose>
+				 	<when test="searchType != null and searchType != '' and searchText != null and searchType != ''">
+						AND ${searchType} like '%' || #{searchText} || '%'
+				 	</when>
+				 	<otherwise>
+<!-- 					해당하는 조건이 만족 하는 기능이 없다면 -->
+<!-- 					ex) 검색 목록을 usr_id 값이 master 값을 조회 -->
+<!-- 					AND usr_id = 'master' -->
+				 	</otherwise>
+				 </choose>
+<!-- 				회원 삭제 여부가 N 삭제 되지 않은 회원만 조회 -->
+				 AND del_at = 'N'
+				 
+			 </trim>
+	</sql>
+	
+	<select id="selectMemberList" parameterType="kr.or.next.nextit.member.service.MemberSearchVo" resultType="kr.or.next.nextit.member.service.MemberVo">
+		SELECT * FROM (  
+    		SELECT ROWNUM as num, temp_member. * from (
+				 SELECT
+				    seq_no,
+				    usr_id,
+				    usr_name,
+				    usr_email,
+				    usr_hp,
+				    usr_fax,
+				    usr_gender,
+				    usr_age,
+				    usr_ip,
+				    del_at,
+				    reg_user,
+				    reg_dt,
+				    upd_user,
+				    upd_dt
+				 FROM
+				 	tb_com_member
+				 	<include refid="selectMemberWhere">
+					 	<property name="searchType" value="${searchType}"/>
+					 	<property name="searchText" value="${searchText}"/>
+		 			</include>
+		 			ORDER BY reg_dt DESC
+			     ) temp_member
+			 ) frm
+		WHERE NUM BETWEEN #{startRow} and #{endRow}
+<!-- 	WHERE del_at = 'N' -->
+	</select>
+	
+	<select id="selectMemberTotalCnt" parameterType="kr.or.next.nextit.member.service.MemberSearchVo" resultType="int">
+		select count(*) totalCnt from tb_com_member
+		<include refid="selectMemberWhere">
+			<property name="searchType" value="${searchType}"/>
+			<property name="searchText" value="${searchText}"/>
+		</include>	
+	</select>
+	
+	<select id="selectMemberInfo" parameterType="String" resultType="kr.or.next.nextit.member.service.MemberVo">
+		SELECT
+	    seq_no,
+	    usr_id,
+	    usr_name,
+	    usr_email,
+	    usr_hp,
+	    usr_fax,
+	    usr_gender,
+	    usr_age,
+	    usr_ip,
+	    del_at,
+	    reg_user,
+	    reg_dt,
+	    upd_user,
+	    upd_dt
+		FROM
+		    tb_com_member
+		WHERE seq_no = #{seqno}
+	</select>
+	
+	<delete id="deleteFlagMemberInfo" parameterType="kr.or.next.nextit.member.service.MemberVo">
+		UPDATE tb_com_member SET
+			del_at = 'Y'
+		WHERE seq_no = #{seqno}
+	</delete>
+	
+	<update id="updateMemberInfo" parameterType="hashMap">
+		UPDATE tb_com_member
+		SET
+	        usr_name  	= #{usrname},
+	   		 usr_email 	= #{usremail},
+<!-- 	        usr_hp 		= #{usrhp}, -->
+<!-- 	        usr_fax 	= #{usrfax},  -->
+	        usr_gender 	= #{usrgender},
+	        usr_age 	= #{usrage},
+	        usr_ip 		= #{usrip}, 
+	        upd_user	= #{upduser}, 
+	        upd_dt 		= sysdate
+	   WHERE
+	   		  seq_no = #{seqNo}
+	</update>
+</mapper>
